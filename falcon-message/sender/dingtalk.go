@@ -39,6 +39,7 @@ func (d *DingTalk) Send(token string, content string, msgType string, arr ...str
 		}
 	} else {
 		//MsgTypeActionCard用于发送自定义的告警类型
+		// 颜色中文名称对照表
 		if msgType == dinghook.MsgTypeActionCard {
 			//获取具体的Counter值并分别处理
 			strCounter := arr[0]
@@ -120,6 +121,34 @@ func (d *DingTalk) Send(token string, content string, msgType string, arr ...str
 				// result = ding.SendMessage(dinghook.Message{Content: notifyContent})
 				//发送普通的消息，钉钉并不能看到文本高亮，所以发送markdown，Title字段并不会显示
 				result = ding.SendMarkdown(dinghook.Markdown{Title: "告警", Content: notifyContent})
+			case "alert.cpu":
+			case "alert.memory":
+				plusIdx := strings.Index(content, "+")
+				if 1 > plusIdx {
+					return errors.New("alert cpu/memory miss the endpoint")
+				}
+				endpoint := content[:plusIdx]
+				packageNameIdx := strings.Index(content, "packageName")
+				if -1 == packageNameIdx {
+					return errors.New("alert cpu/memory tags should contains package name")
+				}
+
+				packageNameWithFunc := content[packageNameIdx+len("packageName="):]
+				strs := strings.Split(packageNameWithFunc, " ")
+				packageName := strs[0]
+				funcStr := strs[1]
+
+				var highligthColor string
+				highligthColor = "#DA70D6" //Orchid 兰花的紫色
+				colorEndpoint := "<font color=" + highligthColor + ">" + endpoint + "主机" + "</font>"
+				notifyContent := ""
+				if strCounter == "alert.cpu" {
+					notifyContent = fmt.Sprintf("%s的%s应用cpu使用率超过%s，请查看检查", colorEndpoint, packageName, getBaseValue(funcStr))
+				} else {
+					notifyContent = fmt.Sprintf("%s的%s应用内存使用率超过%s，请查看检查", colorEndpoint, packageName, getBaseValue(funcStr))
+				}
+
+				result = ding.SendMarkdown(dinghook.Markdown{Title: "告警", Content: notifyContent})
 			default:
 				log.Println("unexpeted counter")
 			}
@@ -135,6 +164,20 @@ func (d *DingTalk) Send(token string, content string, msgType string, arr ...str
 	}
 
 	return nil
+}
+
+func getBaseValue(funcStr string) (baseValue string) {
+	compareBigIdx := strings.Index(funcStr, ">")
+	if -1 == compareBigIdx {
+		return ""
+	}
+
+	compareBigEqualIdx := strings.Index(funcStr, ">=")
+	if -1 == compareBigEqualIdx {
+		return funcStr[compareBigIdx+len(">"):]
+	} else {
+		return funcStr[compareBigEqualIdx+len(">="):]
+	}
 }
 
 func NewDingTalk() *DingTalk {
