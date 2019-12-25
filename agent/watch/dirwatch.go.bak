@@ -1,0 +1,144 @@
+package watch
+
+import (
+	"bufio"
+	"bytes"
+	"fmt"
+	"log"
+	"os"
+	"path/filepath"
+	"strings"
+	"time"
+
+	// log "github.com/Sirupsen/logrus"
+
+	"github.com/fsnotify/fsnotify"
+	"github.com/toolkits_/file"
+	"github.com/toolkits_/sys"
+)
+
+var (
+	// timeout for watcher event
+	checkFileHandleTimeOut  = time.Second * 10
+	uploadFileHandleTimeOut = time.Second * 10
+	watchLoopSleepTimeOut   = time.Second * 10
+	cUploadFile             chan string
+)
+
+const (
+	UploadFile_Chan_Size = 5
+)
+
+func WatchDir(dir string) {
+	watcher, err := fsnotify.NewWatcher()
+	if err != nil {
+		log.Println("create directory watch fail: ", err)
+	}
+	defer watcher.Close()
+
+	err = watcher.Add(dir)
+	if err != nil {
+		log.Println("add watch directory fail: ", err)
+	}
+
+	//cUploadFile = make(chan string, UploadFile_Chan_Size)
+	cUploadFile = make(chan string)
+	go func(watchDir string) {
+		for {
+			select {
+			case <-time.After(checkFileHandleTimeOut):
+				//do nothing
+			case event, ok := <-watcher.Events:
+				if !ok {
+					log.Println("chan watcher Events closed")
+					break
+				}
+				log.Println("event: ", event)
+				if event.Op&fsnotify.Write == fsnotify.Write {
+					log.Println("modified file:", event.Name)
+					cUploadFile <- event.Name
+
+				}
+			case err, ok := <-watcher.Errors:
+				if !ok {
+					log.Println("chan watcher Errors closed")
+					break
+				}
+				log.Println("get watch error: ", err)
+			}
+		}
+
+		log.Println("loop watch directory %s over,check whether this is normal", watchDir)
+	}(dir)
+
+	for {
+		time.Sleep(watchLoopSleepTimeOut)
+	}
+}
+
+func loopUploadFile() {
+	for {
+		select {
+		case <-time.After(uploadFileHandleTimeOut):
+		//do nothing
+		case fileName, ok := <-cUploadFile:
+			if !ok {
+				log.Println("chan upload file closed")
+				break
+			}
+
+			go uploadFile(fileName)
+		}
+	}
+	log.Println("loop upload file over,check whether this is normal")
+}
+
+func uploadFile(filePath string) {
+	if "" == filePath {
+		log.Println("upload file name can not be empty")
+		return
+	}
+
+	filePathAbs, _ := filepath.Abs(filePath)
+	fileInfo, fileErr := os.Stat(filePathAbs)
+	if fileErr != nil {
+		log.Println("get upload file stat error")
+		return
+	}
+
+	if true == fileInfo.IsDir() || fileInfo.Size() <= 0 {
+		log.Println("upload file is not a regular file or size equal zero")
+		return
+	}
+
+	var bs []byte
+	var cmdline string
+	cmdline = fmt.Sprintf("curl -F file=@%s http://47.106.192.182:9067/group1/upload", filePathAbs)
+	bs, err := sys.CmdOutBytes("/system/bin/sh", "-c", cmdline)
+	if err != nil {
+		log.Println("upload file failed when curl: ", err)
+		return
+	}
+
+	reader := bufio.NewReader(bytes.NewBuffer(bs))
+	line, e := file.ReadLine(reader)
+	if e != nil {
+		log.Println("upload file failed when curl: ", err)
+		return
+	}
+
+	line, err = file.ReadLine(reader)
+	if err != nil {
+		log.Println("upload file get response failed: ", err)
+		return
+	}
+
+	strAddr := string(line)
+	idx := strings.Index(strAddr, "default")
+	if -1 == idx {
+		log.Println("upload file response content is wrong")
+		return
+	}
+	subAddr := strAddr[idx+len("default")+1:]
+	log.Println("get upload sub addr is: ", subAddr)
+}
