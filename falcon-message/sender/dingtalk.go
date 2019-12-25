@@ -122,6 +122,7 @@ func (d *DingTalk) Send(token string, content string, msgType string, arr ...str
 				//发送普通的消息，钉钉并不能看到文本高亮，所以发送markdown，Title字段并不会显示
 				result = ding.SendMarkdown(dinghook.Markdown{Title: "告警", Content: notifyContent})
 			case "alert.cpu":
+				fallthrough
 			case "alert.memory":
 				plusIdx := strings.Index(content, "+")
 				if 1 > plusIdx {
