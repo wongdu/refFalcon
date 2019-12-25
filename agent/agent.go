@@ -23,6 +23,7 @@ import (
 	"github.com/open-falcon/falcon-plus/modules/agent/funcs"
 	"github.com/open-falcon/falcon-plus/modules/agent/g"
 	"github.com/open-falcon/falcon-plus/modules/agent/http"
+	respUpper "github.com/open-falcon/falcon-plus/modules/agent/resp_upper"
 	"github.com/open-falcon/falcon-plus/modules/agent/watch"
 )
 
@@ -114,4 +115,14 @@ func SetRebootCauseOffline(rebootCauseOffline bool) {
 // 设置开机时间
 func SetBootupTime(rebootTime string) {
 	cron.SetBootupTime(rebootTime)
+}
+
+// 上报cpu使用率
+func UploadAlertCpuInfo(processName string, cpuValue float32) {
+	respUpper.UploadAlertCpuInfo(processName, cpuValue)
+}
+
+// 上报内存使用率
+func UploadAlertMemoryInfo(processName string, memoryValue float32) {
+	respUpper.UploadAlertMemoryInfo(processName, memoryValue)
 }
