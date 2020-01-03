@@ -31,9 +31,10 @@ const (
 	Watch_Dir = "/data/system/dropbox/"
 )
 
-func agentMain() {
-	//cfg := flag.String("c", "/sdcard/imprexion/cfg.json", "configuration file")
-	cfg := flag.String("c", "/sdcard/imprexion/config/com.imprexion.service.falcon.agent/cfg.json", "configuration file")
+func agentMain(cfgPath string) {
+	// cfg := flag.String("c", "/sdcard/imprexion/cfg.json", "configuration file")
+	// cfg := flag.String("c", "/sdcard/imprexion/config/com.imprexion.service.falcon.agent/cfg.json", "configuration file")
+	cfg := flag.String("c", cfgPath, "configuration file")
 	version := flag.Bool("v", false, "show version")
 	check := flag.Bool("check", false, "check collector")
 
@@ -80,8 +81,9 @@ func agentMain() {
 	select {}
 }
 
-func AgentEnter() {
-	go agentMain()
+// 把配置文件的路径传到底层
+func AgentEnter(cfgPath string) {
+	go agentMain(cfgPath)
 }
 
 // obsolete
