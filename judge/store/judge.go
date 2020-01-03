@@ -223,7 +223,20 @@ func sendEventIfNeed(historyData []*model.HistoryData, isTriggered bool, now int
 		}
 
 		event.Status = "PROBLEM"
-		if !exists || lastEvent.Status[0] == 'O' {
+
+		// 自定义的错误告警
+		bProblemSelf := false
+		for _, v := range g.Config().ProblemSelfMetrics {
+			if v == event.Metric() {
+				bProblemSelf = true
+				break
+			}
+		}
+		if bProblemSelf {
+			event.Status = "DDALARM"
+		}
+
+		if !exists || lastEvent.Status[0] == 'O' || lastEvent.Status == "DDOK" {
 			// 本次触发了阈值，之前又没报过警，得产生一个报警Event
 			event.CurrentStep = 1
 
@@ -257,10 +270,16 @@ func sendEventIfNeed(historyData []*model.HistoryData, isTriggered bool, now int
 		sendEvent(event)
 	} else {
 		// 如果LastEvent是Problem，报OK，否则啥都不做
-		if exists && lastEvent.Status[0] == 'P' {
-			event.Status = "OK"
-			event.CurrentStep = 1
-			sendEvent(event)
+		if exists {
+			if lastEvent.Status[0] == 'P' {
+				event.Status = "OK"
+				event.CurrentStep = 1
+				sendEvent(event)
+			} else if lastEvent.Status == "DDALARM" {
+				event.Status = "DDOK"
+				event.CurrentStep = 1
+				sendEvent(event)
+			}
 		}
 	}
 }

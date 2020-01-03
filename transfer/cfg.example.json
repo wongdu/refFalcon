@@ -24,7 +24,7 @@
         "maxIdle": 32,
         "replicas": 500,
         "cluster": {
-            "judge-00": "127.0.0.1:6080"
+            "judge-00" : "127.0.0.1:6080"
         }
     },
     "graph": {
@@ -36,7 +36,7 @@
         "maxIdle": 32,
         "replicas": 500,
         "cluster": {
-            "graph-00": "127.0.0.1:6070"
+            "graph-00" : "127.0.0.1:6070"
         }
     },
     "tsdb": {

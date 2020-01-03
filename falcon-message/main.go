@@ -165,11 +165,7 @@ func main() {
 				newContent = content[:idx] + "<font color=" + highligthColor + ">" + "OK" + "</font>" + content[idx+len("OK"):]
 				content = newContent
 			}
-		} else if "DDALERT" == msg.Type {
-			msgType = "actioncard"
-			content = msg.Endpoint + "+" + msg.Tags
-			counter = msg.Counter
-		} else {
+		} else if "PROBLEM" == msg.Type {
 			highligthColor = "#FF4500"
 			idx := strings.Index(content, "PROBLEM")
 			log.Println("PROBLEM indext is:", idx)
@@ -177,6 +173,11 @@ func main() {
 				newContent = content[:idx] + "<font color=" + highligthColor + ">" + "PROBLEM" + "</font>" + content[idx+len("PROBLEM"):]
 				content = newContent
 			}
+		} else if "DDALERT" == msg.Type || "DDALARM" == msg.Type || "DDOK" == msg.Type {
+			// msgType = "actioncard"
+			msgType = msg.Type
+			content = msg.Endpoint + "+" + msg.Tags
+			counter = msg.Counter
 		}
 		idx := strings.Index(content, "告警说明")
 		if -1 != idx {

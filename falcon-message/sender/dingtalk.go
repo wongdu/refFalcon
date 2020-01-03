@@ -32,6 +32,7 @@ func (d *DingTalk) Send(token string, content string, msgType string, arr ...str
 	var result dinghook.Result
 
 	if lengthArr == 0 {
+		// 表示发送的是OK、PROBLEM这样的原始的消息
 		if msgType == dinghook.MsgTypeMarkdown {
 			result = ding.SendMarkdown(dinghook.Markdown{Title: "告警", Content: content})
 		} else {
@@ -40,7 +41,10 @@ func (d *DingTalk) Send(token string, content string, msgType string, arr ...str
 	} else {
 		//MsgTypeActionCard用于发送自定义的告警类型
 		// 颜色中文名称对照表
-		if msgType == dinghook.MsgTypeActionCard {
+		// 因为不仅仅定义了DDALERT，后来还有DDALARM、DDOK，
+		// 所以不再用MsgTypeActionCard来区分，而是用各自的msg.Type即DDALERT、DDALARM、DDOK等
+		// if msgType == dinghook.MsgTypeActionCard {
+		if "DDALERT" == msgType {
 			//获取具体的Counter值并分别处理
 			strCounter := arr[0]
 			switch strCounter {
@@ -121,9 +125,17 @@ func (d *DingTalk) Send(token string, content string, msgType string, arr ...str
 				// result = ding.SendMessage(dinghook.Message{Content: notifyContent})
 				//发送普通的消息，钉钉并不能看到文本高亮，所以发送markdown，Title字段并不会显示
 				result = ding.SendMarkdown(dinghook.Markdown{Title: "告警", Content: notifyContent})
+			default:
+				log.Println("unexpeted alert counter")
+			}
+		} else if "DDALARM" == msgType || "DDOK" == msgType {
+			strCounter := arr[0]
+			switch strCounter {
 			case "alert.cpu":
 				fallthrough
 			case "alert.memory":
+				highligthDDOKColor := "#00FF00"
+				highligthDDALARMColor := "#FF4500"
 				plusIdx := strings.Index(content, "+")
 				if 1 > plusIdx {
 					return errors.New("alert cpu/memory miss the endpoint")
@@ -144,14 +156,23 @@ func (d *DingTalk) Send(token string, content string, msgType string, arr ...str
 				colorEndpoint := "<font color=" + highligthColor + ">" + endpoint + "主机" + "</font>"
 				notifyContent := ""
 				if strCounter == "alert.cpu" {
-					notifyContent = fmt.Sprintf("%s的%s应用cpu使用率超过%s，请查看检查", colorEndpoint, packageName, getBaseValue(funcStr))
+					notifyPart := fmt.Sprintf("%s的%s应用cpu使用率超过%s，", colorEndpoint, packageName, getBaseValue(funcStr))
+					if "DDALARM" == msgType {
+						notifyContent = notifyPart + "<font color=" + highligthDDALARMColor + ">" + "请查看检查" + "</font>"
+					} else {
+						notifyContent = notifyPart + "<font color=" + highligthDDOKColor + ">" + "已恢复" + "</font>"
+					}
 				} else {
-					notifyContent = fmt.Sprintf("%s的%s应用内存使用率超过%s，请查看检查", colorEndpoint, packageName, getBaseValue(funcStr))
+					notifyPart := fmt.Sprintf("%s的%s应用内存使用率超过%s，", colorEndpoint, packageName, getBaseValue(funcStr))
+					if "DDALARM" == msgType {
+						notifyContent = notifyPart + "<font color=" + highligthDDALARMColor + ">" + "请查看检查" + "</font>"
+					} else {
+						notifyContent = notifyPart + "<font color=" + highligthDDOKColor + ">" + "已恢复" + "</font>"
+					}
 				}
-
 				result = ding.SendMarkdown(dinghook.Markdown{Title: "告警", Content: notifyContent})
 			default:
-				log.Println("unexpeted counter")
+				log.Println("unexpeted alarm counter")
 			}
 		} else {
 			log.Println("unexpeted message type")

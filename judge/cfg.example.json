@@ -3,6 +3,7 @@
     "debugHost": "nil",
     "remain": 11,
     "ignoreSelfMetrics": [ "crash.log.flag", "offline.reboot" ],
+    "problemSelfMetrics": ["alert.cpu", "alert.memory"],
     "http": {
         "enabled": true,
         "listen": "0.0.0.0:6081"
@@ -12,7 +13,7 @@
         "listen": "0.0.0.0:6080"
     },
     "hbs": {
-        "servers": [ "127.0.0.1:6030" ],
+        "servers": ["127.0.0.1:6030"],
         "timeout": 300,
         "interval": 60
     },

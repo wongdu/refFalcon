@@ -54,14 +54,15 @@ type AlarmConfig struct {
 }
 
 type GlobalConfig struct {
-	Debug             bool         `json:"debug"`
-	DebugHost         string       `json:"debugHost"`
-	Remain            int          `json:"remain"`
-	IgnoreSelfMetrics []string     `json:"ignoreSelfMetrics"`
-	Http              *HttpConfig  `json:"http"`
-	Rpc               *RpcConfig   `json:"rpc"`
-	Hbs               *HbsConfig   `json:"hbs"`
-	Alarm             *AlarmConfig `json:"alarm"`
+	Debug              bool         `json:"debug"`
+	DebugHost          string       `json:"debugHost"`
+	Remain             int          `json:"remain"`
+	IgnoreSelfMetrics  []string     `json:"ignoreSelfMetrics"`
+	ProblemSelfMetrics []string     `json:"problemSelfMetrics"`
+	Http               *HttpConfig  `json:"http"`
+	Rpc                *RpcConfig   `json:"rpc"`
+	Hbs                *HbsConfig   `json:"hbs"`
+	Alarm              *AlarmConfig `json:"alarm"`
 }
 
 var (
