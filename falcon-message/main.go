@@ -44,58 +44,6 @@ var (
 	tpl *template.Template
 )
 
-func test_main() {
-	cfg = config.Read()
-	funcMap := template.FuncMap{"elapse": func(count, reportInterval, triggerCount, postpone int) int {
-		// 都使用 秒计算
-		// 超过1次，要计算推迟时间
-		if count > 1 {
-			return reportInterval*triggerCount + postpone*(count-1)
-		}
-
-		// 第一次，直接返回上报间隔
-		return reportInterval * triggerCount
-	}, "divide": func(a, b int) int { return a / b },
-		"timeFormat": func(t time.Time, format string) string {
-			return t.Format(format)
-		},
-		"timeDiffFormat": func(t time.Time, format string, seconds int) string {
-			return t.Add(-(time.Second * time.Duration(seconds))).Format(format)
-		}}
-
-	tpl = template.Must(template.New(path.Base(cfg.DingTalk.TemplateFile)).Funcs(funcMap).ParseFiles(cfg.DingTalk.TemplateFile))
-	ding = sender.NewDingTalk()
-	token := "a37cfdb47cce751f750379c6508c850f41b610c4acef6e09f84b4867ef0385e4"
-	content := "[P0][OK][B8A][][网络连接断开已恢复 all(#3) agent.alive  1<0][O1 2019-10-14 09:42:00]"
-	msg, err := util.HandleContent(content)
-	if err != nil {
-		return
-	}
-
-	var buffer bytes.Buffer
-	if err := tpl.Execute(&buffer, msg); err != nil {
-		return
-	}
-	content = buffer.String()
-	log.Println("new token:", token, " content:", content)
-	var newContent string
-	if "OK" == msg.Type {
-		//idx := strings.Index("OK", content)
-		idx := strings.Index(content, "OK")
-		log.Println("OK indext is:", idx)
-		if -1 != idx {
-			newContent = content[:idx] + "$\\color{red}{OK}$" + content[idx+len("OK"):]
-		}
-		log.Println("new content changed")
-
-	}
-	log.Println("new content:", newContent)
-	//if err := ding.Send(token, content, "markdown"); err != nil {
-	if err := ding.Send(token, newContent, "markdown"); err != nil {
-		log.Println("ERR:", err)
-	}
-}
-
 func main() {
 
 	cfg = config.Read()
