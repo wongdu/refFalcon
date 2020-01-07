@@ -138,13 +138,13 @@ func (d *DingTalk) Send(token string, content string, msgType string, arr ...str
 				highligthDDALARMColor := "#FF4500"
 				plusTagsIdx := strings.Index(content, "+")
 				if 1 > plusTagsIdx {
-					return errors.New("alert cpu/memory miss the endpoint")
+					return errors.New(strCounter + " miss the endpoint")
 				}
 				endpoint := content[:plusTagsIdx]
 
 				plusDescIdx := strings.LastIndex(content, "+")
 				if -1 == plusDescIdx || plusDescIdx <= plusTagsIdx {
-					return errors.New("alert cpu/memory miss the description")
+					return errors.New(strCounter + " miss the description")
 				}
 
 				// +1是需要跨过+号
@@ -152,7 +152,7 @@ func (d *DingTalk) Send(token string, content string, msgType string, arr ...str
 
 				packageNameIdx := strings.Index(content, "packageName")
 				if -1 == packageNameIdx {
-					return errors.New("alert cpu/memory tags should contains package name")
+					return errors.New(strCounter + " tags should contains package name")
 				}
 
 				packageNameWithFunc := content[packageNameIdx+len("packageName=") : plusDescIdx]
