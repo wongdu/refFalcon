@@ -158,14 +158,12 @@ func (d *DingTalk) Send(token string, content string, msgType string, arr ...str
 				packageNameWithFunc := content[packageNameIdx+len("packageName=") : plusDescIdx]
 				strs := strings.Split(packageNameWithFunc, " ")
 				packageName := strs[0]
-				// funcStr := strs[1]
 
 				var highligthColor string
 				highligthColor = "#DA70D6" //Orchid 兰花的紫色
 				colorEndpoint := "<font color=" + highligthColor + ">" + endpoint + "主机" + "</font>"
 				notifyContent := ""
 				if strCounter == "alert.cpu" {
-					// notifyPart := fmt.Sprintf("%s的%s应用cpu使用率超过%s%%，", colorEndpoint, packageName, getBaseValue(funcStr))
 					notifyPart := fmt.Sprintf("%s的%s应用%s，", colorEndpoint, packageName, strDesc)
 					if "DDALARM" == msgType {
 						notifyContent = notifyPart + "<font color=" + highligthDDALARMColor + ">" + "请查看检查" + "</font>"
@@ -173,7 +171,6 @@ func (d *DingTalk) Send(token string, content string, msgType string, arr ...str
 						notifyContent = notifyPart + "<font color=" + highligthDDOKColor + ">" + "已恢复" + "</font>"
 					}
 				} else {
-					// notifyPart := fmt.Sprintf("%s的%s应用内存使用率超过%s，", colorEndpoint, packageName, getBaseValue(funcStr))
 					notifyPart := fmt.Sprintf("%s的%s应用%s，", colorEndpoint, packageName, strDesc)
 					if "DDALARM" == msgType {
 						notifyContent = notifyPart + "<font color=" + highligthDDALARMColor + ">" + "请查看检查" + "</font>"
