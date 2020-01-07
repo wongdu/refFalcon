@@ -121,10 +121,15 @@ func main() {
 				newContent = content[:idx] + "<font color=" + highligthColor + ">" + "PROBLEM" + "</font>" + content[idx+len("PROBLEM"):]
 				content = newContent
 			}
-		} else if "DDALERT" == msg.Type || "DDALARM" == msg.Type || "DDOK" == msg.Type {
+		} else if "DDALERT" == msg.Type {
 			// msgType = "actioncard"
 			msgType = msg.Type
 			content = msg.Endpoint + "+" + msg.Tags
+			counter = msg.Counter
+		} else if "DDALARM" == msg.Type || "DDOK" == msg.Type {
+			// msgType = "actioncard"
+			msgType = msg.Type
+			content = msg.Endpoint + "+" + msg.Tags + "+" + msg.Desc
 			counter = msg.Counter
 		}
 		idx := strings.Index(content, "告警说明")

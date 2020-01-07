@@ -136,34 +136,45 @@ func (d *DingTalk) Send(token string, content string, msgType string, arr ...str
 			case "alert.memory":
 				highligthDDOKColor := "#00FF00"
 				highligthDDALARMColor := "#FF4500"
-				plusIdx := strings.Index(content, "+")
-				if 1 > plusIdx {
+				plusTagsIdx := strings.Index(content, "+")
+				if 1 > plusTagsIdx {
 					return errors.New("alert cpu/memory miss the endpoint")
 				}
-				endpoint := content[:plusIdx]
+				endpoint := content[:plusTagsIdx]
+
+				plusDescIdx := strings.LastIndex(content, "+")
+				if -1 == plusDescIdx || plusDescIdx <= plusTagsIdx {
+					return errors.New("alert cpu/memory miss the description")
+				}
+
+				// +1是需要跨过+号
+				strDesc := content[plusDescIdx+1:]
+
 				packageNameIdx := strings.Index(content, "packageName")
 				if -1 == packageNameIdx {
 					return errors.New("alert cpu/memory tags should contains package name")
 				}
 
-				packageNameWithFunc := content[packageNameIdx+len("packageName="):]
+				packageNameWithFunc := content[packageNameIdx+len("packageName=") : plusDescIdx]
 				strs := strings.Split(packageNameWithFunc, " ")
 				packageName := strs[0]
-				funcStr := strs[1]
+				// funcStr := strs[1]
 
 				var highligthColor string
 				highligthColor = "#DA70D6" //Orchid 兰花的紫色
 				colorEndpoint := "<font color=" + highligthColor + ">" + endpoint + "主机" + "</font>"
 				notifyContent := ""
 				if strCounter == "alert.cpu" {
-					notifyPart := fmt.Sprintf("%s的%s应用cpu使用率超过%s，", colorEndpoint, packageName, getBaseValue(funcStr))
+					// notifyPart := fmt.Sprintf("%s的%s应用cpu使用率超过%s%%，", colorEndpoint, packageName, getBaseValue(funcStr))
+					notifyPart := fmt.Sprintf("%s的%s应用%s，", colorEndpoint, packageName, strDesc)
 					if "DDALARM" == msgType {
 						notifyContent = notifyPart + "<font color=" + highligthDDALARMColor + ">" + "请查看检查" + "</font>"
 					} else {
 						notifyContent = notifyPart + "<font color=" + highligthDDOKColor + ">" + "已恢复" + "</font>"
 					}
 				} else {
-					notifyPart := fmt.Sprintf("%s的%s应用内存使用率超过%s，", colorEndpoint, packageName, getBaseValue(funcStr))
+					// notifyPart := fmt.Sprintf("%s的%s应用内存使用率超过%s，", colorEndpoint, packageName, getBaseValue(funcStr))
+					notifyPart := fmt.Sprintf("%s的%s应用%s，", colorEndpoint, packageName, strDesc)
 					if "DDALARM" == msgType {
 						notifyContent = notifyPart + "<font color=" + highligthDDALARMColor + ">" + "请查看检查" + "</font>"
 					} else {
