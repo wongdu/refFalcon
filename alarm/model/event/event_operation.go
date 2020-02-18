@@ -30,7 +30,7 @@ const timeLayout = "2006-01-02 15:04:05"
 
 func insertEvent(q orm.Ormer, eve *coommonModel.Event) (res sql.Result, err error) {
 	var status int
-	if status = 0; eve.Status == "OK" {
+	if status = 0; eve.Status == "OK" || "DDOK" == eve.Status {
 		status = 1
 	}
 	sqltemplete := `INSERT INTO events (
