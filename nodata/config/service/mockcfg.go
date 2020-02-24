@@ -35,6 +35,20 @@ type MockCfg struct {
 	Mock    float64
 }
 
+// 20200224
+func getSliceOfDictedTagstringFromNodataConfig(nodataTags string) []map[string]string {
+	retSliceOfDict := make([]map[string]string, 0)
+
+	tags := strings.Split(nodataTags, ";")
+	for _, tag := range tags {
+		dictedTags := cutils.DictedTagstring(tag)
+		if len(dictedTags) > 0 {
+			retSliceOfDict = append(retSliceOfDict, dictedTags)
+		}
+	}
+	return retSliceOfDict
+}
+
 // 当 grp展开结果 与 host结果 存在冲突时, 优先选择 host结果
 func GetMockCfgFromDB() map[string]*cmodel.NodataConfig {
 	ret := make(map[string]*cmodel.NodataConfig)
@@ -61,7 +75,8 @@ func GetMockCfgFromDB() map[string]*cmodel.NodataConfig {
 			log.Println("db.scan error, mockcfg", err)
 			continue
 		}
-		t.Tags = cutils.DictedTagstring(tags)
+		// t.Tags = cutils.DictedTagstring(tags)
+		sliceNodataTags := getSliceOfDictedTagstringFromNodataConfig(tags)
 
 		err = checkMockCfg(&t)
 		if err != nil {
@@ -75,22 +90,28 @@ func GetMockCfgFromDB() map[string]*cmodel.NodataConfig {
 		}
 
 		for _, ep := range endpoints {
-			uuid := cutils.PK(ep, t.Metric, t.Tags)
-			ncfg := cmodel.NewNodataConfig(t.Id, t.Name, t.ObjType, ep, t.Metric, t.Tags, t.Type, t.Step, t.Mock)
 
-			val, found := ret[uuid]
-			if !found { // so cute, it's the first one
-				ret[uuid] = ncfg
-				continue
+			for _, v := range sliceNodataTags {
+				t.Tags = v
+
+				uuid := cutils.PK(ep, t.Metric, t.Tags)
+				ncfg := cmodel.NewNodataConfig(t.Id, t.Name, t.ObjType, ep, t.Metric, t.Tags, t.Type, t.Step, t.Mock)
+
+				val, found := ret[uuid]
+				if !found { // so cute, it's the first one
+					ret[uuid] = ncfg
+					continue
+				}
+
+				if isSpuerNodataCfg(val, ncfg) {
+					// val is spuer than ncfg, so drop ncfg
+					log.Printf("nodata.mockcfg conflict, %s, used %s, drop %s", uuid, val.Name, ncfg.Name)
+				} else {
+					ret[uuid] = ncfg // overwrite the old one
+					log.Printf("nodata.mockcfg conflict, %s, used %s, drop %s", uuid, ncfg.Name, val.Name)
+				}
 			}
 
-			if isSpuerNodataCfg(val, ncfg) {
-				// val is spuer than ncfg, so drop ncfg
-				log.Printf("nodata.mockcfg conflict, %s, used %s, drop %s", uuid, val.Name, ncfg.Name)
-			} else {
-				ret[uuid] = ncfg // overwrite the old one
-				log.Printf("nodata.mockcfg conflict, %s, used %s, drop %s", uuid, ncfg.Name, val.Name)
-			}
 		}
 	}
 
