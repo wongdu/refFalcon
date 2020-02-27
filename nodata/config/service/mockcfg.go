@@ -46,6 +46,13 @@ func getSliceOfDictedTagstringFromNodataConfig(nodataTags string) []map[string]s
 			retSliceOfDict = append(retSliceOfDict, dictedTags)
 		}
 	}
+
+	//fix: 20200227,解决如果dashboard上如果nodata的tags选项填写为空时，GetMockCfgFromDB函数中
+	//直接跳过获取NodataConfig的步骤，即下面显示，不再调用执行cmodel.NewNodataConfig。
+	if len(retSliceOfDict) == 0 {
+		retSliceOfDict = append(retSliceOfDict, map[string]string{})
+	}
+
 	return retSliceOfDict
 }
 
