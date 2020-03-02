@@ -72,7 +72,7 @@ func (d *DingTalk) Send(token string, content string, msgType string, arr ...str
 				colorEndpoint := "<font color=" + highligthColor + ">" + endpoint + "主机" + "</font>"
 				notifyContent := fmt.Sprintf("%s需要处理异常日志: 应用%s出现严重错误，请点击下面链接查看完整日志", colorEndpoint, packageName)
 				result = ding.SendActionCard(dinghook.ActionCard{Title: "异常日志告警", Content: notifyContent, CompleteContentURL: singleURL})
-			case "crash.log.flag":
+			case "crash.log.flag": //20200302：现在已经替换成了crash.log
 				contentIdx := strings.Index(content, "content=")
 				//前面至少有主机名和+号，至少也占用两个字节
 				if 1 >= contentIdx {
@@ -130,12 +130,12 @@ func (d *DingTalk) Send(token string, content string, msgType string, arr ...str
 			}
 		} else if "DDALARM" == msgType || "DDOK" == msgType {
 			strCounter := arr[0]
+			highligthDDOKColor := "#00FF00"
+			highligthDDALARMColor := "#FF4500"
 			switch strCounter {
 			case "alert.cpu":
 				fallthrough
 			case "alert.memory":
-				highligthDDOKColor := "#00FF00"
-				highligthDDALARMColor := "#FF4500"
 				plusTagsIdx := strings.Index(content, "+")
 				if 1 > plusTagsIdx {
 					return errors.New(strCounter + " miss the endpoint")
@@ -177,6 +177,42 @@ func (d *DingTalk) Send(token string, content string, msgType string, arr ...str
 					} else {
 						notifyContent = notifyPart + "<font color=" + highligthDDOKColor + ">" + "已恢复" + "</font>"
 					}
+				}
+				result = ding.SendMarkdown(dinghook.Markdown{Title: "告警", Content: notifyContent})
+			case "foreground.app":
+				plusTagsIdx := strings.Index(content, "+")
+				if 1 > plusTagsIdx {
+					return errors.New(strCounter + " miss the endpoint")
+				}
+				endpoint := content[:plusTagsIdx]
+
+				plusDescIdx := strings.LastIndex(content, "+")
+				if -1 == plusDescIdx || plusDescIdx <= plusTagsIdx {
+					return errors.New(strCounter + " miss the description")
+				}
+
+				// +1是需要跨过+号
+				strDesc := content[plusDescIdx+1:]
+
+				packageNameIdx := strings.Index(content, "packageName")
+				if -1 == packageNameIdx {
+					return errors.New(strCounter + " tags should contains package name")
+				}
+
+				packageNameWithFunc := content[packageNameIdx+len("packageName=") : plusDescIdx]
+				strs := strings.Split(packageNameWithFunc, " ")
+				packageName := strs[0]
+
+				var highligthColor string
+				highligthColor = "#8A2BE2" //BlueViolet 深紫罗兰的蓝色
+
+				colorEndpoint := "<font color=" + highligthColor + ">" + endpoint + "主机" + "</font>"
+				notifyContent := ""
+				notifyPart := fmt.Sprintf("%s的%s应用%s，", colorEndpoint, packageName, strDesc)
+				if "DDALARM" == msgType {
+					notifyContent = notifyPart + "<font color=" + highligthDDALARMColor + ">" + "请查看检查" + "</font>"
+				} else {
+					notifyContent = notifyPart + "<font color=" + highligthDDOKColor + ">" + "已恢复" + "</font>"
 				}
 				result = ding.SendMarkdown(dinghook.Markdown{Title: "告警", Content: notifyContent})
 			default:
