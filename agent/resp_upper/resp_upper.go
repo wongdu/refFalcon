@@ -43,3 +43,20 @@ func UploadAlertMemoryInfo(processName string, memoryValue float32) {
 	g.SendToTransfer(mvs)
 
 }
+
+func UploadForegroundAppTimeout(packageName string, timeLast int) {
+	var mvs []*model.MetricValue
+
+	tags := fmt.Sprintf("packageName=%s,lastValue=%d", packageName, timeLast)
+	mvs = []*model.MetricValue{funcs.GaugeValue("foreground.app", 1, tags)}
+
+	hostname, _ := g.Hostname()
+	now := time.Now().Unix()
+	for j := 0; j < len(mvs); j++ {
+		mvs[j].Step = int64(g.Config().Transfer.Interval)
+		mvs[j].Endpoint = hostname
+		mvs[j].Timestamp = now
+	}
+
+	g.SendToTransfer(mvs)
+}

@@ -128,3 +128,8 @@ func UploadAlertCpuInfo(processName string, cpuValue float32) {
 func UploadAlertMemoryInfo(processName string, memoryValue float32) {
 	respUpper.UploadAlertMemoryInfo(processName, memoryValue)
 }
+
+// 上报前台应用超时
+func UploadForegroundAppTimeout(packageName string, timeLast int) {
+	respUpper.UploadForegroundAppTimeout(packageName, timeLast)
+}
