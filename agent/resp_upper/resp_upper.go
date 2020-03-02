@@ -44,10 +44,13 @@ func UploadAlertMemoryInfo(processName string, memoryValue float32) {
 
 }
 
-func UploadForegroundAppTimeout(packageName string, timeLast int) {
+//tags可以包含包名，但是不能包含超时的时长，否则会一直告警，因为在组件里面judgeItemWithStrategy函数里，
+//生成的model.Event的Id，既包含策略的id，也包含utils.PK(this.Endpoint, this.Metric, this.Tags),
+//即tags不同认为是不用的event，会一直报警，超过管理平台配置的Max，即最大告警次数。
+func UploadForegroundAppTimeout(packageName string) {
 	var mvs []*model.MetricValue
 
-	tags := fmt.Sprintf("packageName=%s,lastValue=%d", packageName, timeLast)
+	tags := fmt.Sprintf("packageName=%s", packageName)
 	mvs = []*model.MetricValue{funcs.GaugeValue("foreground.app", 1, tags)}
 
 	hostname, _ := g.Hostname()

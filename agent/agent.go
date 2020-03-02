@@ -130,6 +130,6 @@ func UploadAlertMemoryInfo(processName string, memoryValue float32) {
 }
 
 // 上报前台应用超时
-func UploadForegroundAppTimeout(packageName string, timeLast int) {
-	respUpper.UploadForegroundAppTimeout(packageName, timeLast)
+func UploadForegroundAppTimeout(packageName string) {
+	respUpper.UploadForegroundAppTimeout(packageName)
 }
