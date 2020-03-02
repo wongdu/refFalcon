@@ -208,7 +208,7 @@ func judgeItemWithExpression(L *SafeLinkedList, expression *model.Expression, fi
 func sendEventIfNeed(historyData []*model.HistoryData, isTriggered bool, now int64, event *model.Event, maxStep int) {
 	lastEvent, exists := g.LastEvents.Get(event.Id)
 	if isTriggered {
-		//检测当前metric如果是自定义的告警，就直接发送，不再保存做恢复判断
+		//检测当前metric如果是自定义的告警，就直接发送，不再保存做恢复判断，即ALERT
 		bIgnore := false
 		for _, v := range g.Config().IgnoreSelfMetrics {
 			if v == event.Metric() {
@@ -224,7 +224,7 @@ func sendEventIfNeed(historyData []*model.HistoryData, isTriggered bool, now int
 
 		event.Status = "PROBLEM"
 
-		// 自定义的错误告警
+		//自定义的错误告警，保存做恢复判断，即ALARM
 		bProblemSelf := false
 		for _, v := range g.Config().ProblemSelfMetrics {
 			if v == event.Metric() {

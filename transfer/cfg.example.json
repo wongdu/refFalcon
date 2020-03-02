@@ -1,7 +1,7 @@
 {
     "debug": true,
     "minStep": 30,
-    "ignoreSelfMetrics": [ "crash.log.flag", "offline.reboot" ],
+    "ignoreSelfMetrics": [ "crash.log.flag", "offline.reboot", "foreground.app" ],
     "http": {
         "enabled": true,
         "listen": "0.0.0.0:6060"

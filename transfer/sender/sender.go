@@ -122,9 +122,10 @@ func Push2GraphSendQueue(items []*cmodel.MetaData) {
 			continue
 		}
 
-		// 异常日志的item并不需要发送到graph来存储到数据库
-		// 因为这种metric+tag会让在dashboard中很多无用数据，造成干扰
+		//异常日志的item并不需要发送到graph来存储到数据库
+		//因为这种metric+tag会让在dashboard中很多无用数据，造成干扰
 		//检测当前metric如果是在忽略列表里，就不发送到graph，防止在dashboard中造成干扰
+		//事实上不仅仅是异常日志，断网重启、超时的前台应用都是需要忽略掉的
 		bIgnore = false
 		for _, v := range g.Config().IgnoreSelfMetrics {
 			if v == graphItem.Metric {
