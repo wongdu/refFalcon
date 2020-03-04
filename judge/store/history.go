@@ -78,6 +78,7 @@ func (this *JudgeItemMap) CleanStale(before int64) {
 			continue
 		}
 
+		//20200303_17:16:50 看上面调用的BatchDelete函数，这里是将JudgeItemMap中的*SafeLinkedList从map中删除
 		if front.Value.(*model.JudgeItem).Timestamp < before {
 			keys = append(keys, key)
 		}
