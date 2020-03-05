@@ -44,12 +44,20 @@ type SafeFilterMap struct {
 	M map[string]string
 }
 
+//2020-03-04_11:19
+type SafePriorityMetricEventMap struct {
+	sync.RWMutex
+	M map[string][]*model.Event
+}
+
 var (
 	HbsClient     *SingleConnRpcClient
 	StrategyMap   = &SafeStrategyMap{M: make(map[string][]model.Strategy)}
 	ExpressionMap = &SafeExpressionMap{M: make(map[string][]*model.Expression)}
 	LastEvents    = &SafeEventMap{M: make(map[string]*model.Event)}
 	FilterMap     = &SafeFilterMap{M: make(map[string]string)}
+
+	PriorityMetricEventMap = &SafePriorityMetricEventMap{M: make(map[string][]*model.Event)}
 )
 
 func InitHbsClient() {
@@ -95,6 +103,25 @@ func (this *SafeEventMap) Set(key string, event *model.Event) {
 	this.Lock()
 	defer this.Unlock()
 	this.M[key] = event
+}
+
+//2020-03-04_16:42
+func (this *SafePriorityMetricEventMap) ReInit(m map[string][]*model.Event) {
+	this.Lock()
+	defer this.Unlock()
+	this.M = m
+}
+
+func (this *SafePriorityMetricEventMap) Get() map[string][]*model.Event {
+	this.RLock()
+	defer this.RUnlock()
+	return this.M
+}
+
+func (this *SafePriorityMetricEventMap) Delete(key string) {
+	this.RLock()
+	defer this.RUnlock()
+	delete(this.M, key)
 }
 
 func (this *SafeFilterMap) ReInit(m map[string]string) {

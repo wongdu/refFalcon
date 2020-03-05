@@ -63,6 +63,24 @@ func judgeItemWithStrategy(L *SafeLinkedList, strategy model.Strategy, firstItem
 		return
 	}
 
+	//20200304_14:20：如果当前的value
+	//在调用Compute接口前预先调用处理恢复通知的数据，同样的逻辑需要在judgeItemWithExpression函数中也要实现，
+	//暂时不加，因为dashboard那里未配置expression策略，只配置了strategy策略。
+	if priorityValue, exist := g.Config().PriorityClusters[firstItem.Metric]; exist && priorityValue == int(firstItem.Value) {
+		key := fmt.Sprintf("%s_%s", firstItem.Endpoint, firstItem.Metric)
+		priorityMetricEventMap := g.PriorityMetricEventMap.Get()
+		priorityMetricEvents, exists := priorityMetricEventMap[key]
+		if exists {
+			for modelEventItem := range priorityMetricEvents {
+				modelEventItem.Status = "DDOK"
+				modelEventItem.CurrentStep = 1
+				sendEventWithoutSave(modelEventItem)
+			}
+
+			g.PriorityMetricEventMap.Delete(key)
+		}
+	}
+
 	historyData, leftValue, isTriggered, isEnough := fn.Compute(L)
 	if !isEnough {
 		return
@@ -77,12 +95,25 @@ func judgeItemWithStrategy(L *SafeLinkedList, strategy model.Strategy, firstItem
 		PushedTags: firstItem.Tags,
 	}
 
-	sendEventIfNeed(historyData, isTriggered, now, event, strategy.MaxStep)
+	sendEventIfNeed(historyData, isTriggered, now, event, strategy.MaxStep, firstItem.Metric)
 }
 
-func sendEvent(event *model.Event) {
+func sendEvent(event *model.Event, endpointMetric string) {
 	// update last event
 	g.LastEvents.Set(event.Id, event)
+
+	if priorityValue, exist := g.Config().PriorityClusters[endpointMetric]; exist {
+		key := fmt.Sprintf("%s_%s", event.Endpoint, endpointMetric)
+		priorityMetricEventMap := g.PriorityMetricEventMap.Get()
+		priorityMetricEvents, exists := priorityMetricEventMap[key]
+		if exists {
+			priorityMetricEvents = append(priorityMetricEvents, event)
+		} else {
+			priorityMetricEventMap[key] = []*model.Event{event}
+		}
+		g.PriorityMetricEventMap.ReInit(priorityMetricEventMap)
+	}
+
 	sendEventWithoutSave(event)
 }
 
@@ -202,10 +233,11 @@ func judgeItemWithExpression(L *SafeLinkedList, expression *model.Expression, fi
 		PushedTags: firstItem.Tags,
 	}
 
-	sendEventIfNeed(historyData, isTriggered, now, event, expression.MaxStep)
+	sendEventIfNeed(historyData, isTriggered, now, event, expression.MaxStep, firstItem.Metric)
 }
 
-func sendEventIfNeed(historyData []*model.HistoryData, isTriggered bool, now int64, event *model.Event, maxStep int) {
+//20200304_14:47：增加metric，如果是PriorityCluster簇中的metric，则单独放到EndpointMetricEvents集合中
+func sendEventIfNeed(historyData []*model.HistoryData, isTriggered bool, now int64, event *model.Event, maxStep int, endpointMetric string) {
 	lastEvent, exists := g.LastEvents.Get(event.Id)
 	if isTriggered {
 		//检测当前metric如果是自定义的告警，就直接发送，不再保存做恢复判断，即ALERT
@@ -245,7 +277,7 @@ func sendEventIfNeed(historyData []*model.HistoryData, isTriggered bool, now int
 				return
 			}
 
-			sendEvent(event)
+			sendEvent(event, endpointMetric)
 			return
 		}
 
@@ -267,19 +299,21 @@ func sendEventIfNeed(historyData []*model.HistoryData, isTriggered bool, now int
 		}
 
 		event.CurrentStep = lastEvent.CurrentStep + 1
-		sendEvent(event)
+		sendEvent(event, endpointMetric)
 	} else {
 		// 如果LastEvent是Problem，报OK，否则啥都不做
 		if exists {
 			if lastEvent.Status[0] == 'P' {
 				event.Status = "OK"
 				event.CurrentStep = 1
-				sendEvent(event)
+				sendEvent(event, endpointMetric)
 			} else if lastEvent.Status == "DDALARM" {
 				event.Status = "DDOK"
 				event.CurrentStep = 1
-				sendEvent(event)
+				sendEvent(event, endpointMetric)
 			}
 		}
+		//2020-03-04_20:18：无需在此处理priority metric event，因为在收到恢复通知数据时已经处理了，
+		//即在judgeItemWithStrategy函数中在调用func.go文件中的Compute接口之前
 	}
 }

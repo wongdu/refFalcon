@@ -44,14 +44,20 @@ func UploadAlertMemoryInfo(processName string, memoryValue float32) {
 
 }
 
-//tags¿ÉÒÔ°üº¬°üÃû£¬µ«ÊÇ²»ÄÜ°üº¬³¬Ê±µÄÊ±³¤£¬·ñÔò»áÒ»Ö±¸æ¾¯£¬ÒòÎªÔÚ×é¼şÀïÃæjudgeItemWithStrategyº¯ÊıÀï£¬
-//Éú³ÉµÄmodel.EventµÄId£¬¼È°üº¬²ßÂÔµÄid£¬Ò²°üº¬utils.PK(this.Endpoint, this.Metric, this.Tags),
-//¼´tags²»Í¬ÈÏÎªÊÇ²»ÓÃµÄevent£¬»áÒ»Ö±±¨¾¯£¬³¬¹ı¹ÜÀíÆ½Ì¨ÅäÖÃµÄMax£¬¼´×î´ó¸æ¾¯´ÎÊı¡£
-func UploadForegroundAppTimeout(packageName string) {
+//tagså¯ä»¥åŒ…å«åŒ…åï¼Œä½†æ˜¯ä¸èƒ½åŒ…å«è¶…æ—¶çš„æ—¶é•¿ï¼Œå¦åˆ™ä¼šä¸€ç›´å‘Šè­¦ï¼Œå› ä¸ºåœ¨ç»„ä»¶é‡Œé¢judgeItemWithStrategyå‡½æ•°é‡Œï¼Œ
+//ç”Ÿæˆçš„model.Eventçš„Idï¼Œæ—¢åŒ…å«ç­–ç•¥çš„idï¼Œä¹ŸåŒ…å«utils.PK(this.Endpoint, this.Metric, this.Tags),
+//å³tagsä¸åŒè®¤ä¸ºæ˜¯ä¸ç”¨çš„eventï¼Œä¼šä¸€ç›´æŠ¥è­¦ï¼Œè¶…è¿‡ç®¡ç†å¹³å°é…ç½®çš„Maxï¼Œå³æœ€å¤§å‘Šè­¦æ¬¡æ•°ã€‚
+//20200304_10:33:29
+//alertFlag:
+//	1è¡¨ç¤ºå‰å°åº”ç”¨è¶…æ—¶ï¼›
+//	0è¡¨ç¤ºæ— éœ€å‘Šè­¦ï¼Œå¦‚æœå½“å‰å±ç«¯æœ‰å‘Šè­¦æ²¡æœ‰æ¢å¤åˆ™ç›´æ¥æ¢å¤ï¼›
+//	-1è¡¨ç¤ºæ²¡æœ‰æ­£å¸¸è·å–åˆ°å½“å‰çš„å‰å°åº”ç”¨ï¼Œåˆ™åªéœ€å‘Šè­¦ä¸€æ¬¡ï¼›
+
+func UploadForegroundAppTimeout(packageName string, alertFlag int) {
 	var mvs []*model.MetricValue
 
 	tags := fmt.Sprintf("packageName=%s", packageName)
-	mvs = []*model.MetricValue{funcs.GaugeValue("foreground.app", 1, tags)}
+	mvs = []*model.MetricValue{funcs.GaugeValue("foreground.app", alertFlag, tags)}
 
 	hostname, _ := g.Hostname()
 	now := time.Now().Unix()
