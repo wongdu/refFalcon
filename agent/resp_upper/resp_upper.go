@@ -44,9 +44,9 @@ func UploadAlertMemoryInfo(processName string, memoryValue float32) {
 
 }
 
-//tags¿ÉÒÔ°üº¬°üÃû£¬µ«ÊÇ²»ÄÜ°üº¬³¬Ê±µÄÊ±³¤£¬·ñÔò»áÒ»Ö±¸æ¾¯£¬ÒòÎªÔÚ×é¼şÀïÃæjudgeItemWithStrategyº¯ÊıÀï£¬
-//Éú³ÉµÄmodel.EventµÄId£¬¼È°üº¬²ßÂÔµÄid£¬Ò²°üº¬utils.PK(this.Endpoint, this.Metric, this.Tags),
-//¼´tags²»Í¬ÈÏÎªÊÇ²»ÓÃµÄevent£¬»áÒ»Ö±±¨¾¯£¬³¬¹ı¹ÜÀíÆ½Ì¨ÅäÖÃµÄMax£¬¼´×î´ó¸æ¾¯´ÎÊı¡£
+//tagså¯ä»¥åŒ…å«åŒ…åï¼Œä½†æ˜¯ä¸èƒ½åŒ…å«è¶…æ—¶çš„æ—¶é•¿ï¼Œå¦åˆ™ä¼šä¸€ç›´å‘Šè­¦ï¼Œå› ä¸ºåœ¨ç»„ä»¶é‡Œé¢judgeItemWithStrategyå‡½æ•°é‡Œï¼Œ
+//ç”Ÿæˆçš„model.Eventçš„Idï¼Œæ—¢åŒ…å«ç­–ç•¥çš„idï¼Œä¹ŸåŒ…å«utils.PK(this.Endpoint, this.Metric, this.Tags),
+//å³tagsä¸åŒè®¤ä¸ºæ˜¯ä¸ç”¨çš„eventï¼Œä¼šä¸€ç›´æŠ¥è­¦ï¼Œè¶…è¿‡ç®¡ç†å¹³å°é…ç½®çš„Maxï¼Œå³æœ€å¤§å‘Šè­¦æ¬¡æ•°ã€‚
 func UploadForegroundAppTimeout(packageName string) {
 	var mvs []*model.MetricValue
 
